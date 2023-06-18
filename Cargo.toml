@@ -1,0 +1,28 @@
+[package]
+name = "magic-switcheroo"
+version = "0.1.0"
+edition = "2021"
+
+authors = ["Gabriel Falcão <gabriel@nacaolivre.org>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ansi_term = { version = "0.12.1", features = ["derive_serde_style", "serde"] }
+clap = { version = "4.3.2", features = ["derive", "cargo", "unicode", "env", "string"] }
+crc = "3.0.1"
+hex = { version = "0.4.3", features = ["serde"] }
+serde = { version = "1.0.164", features = ["derive", "serde_derive"] }
+serde_json = { version = "1.0.97", features = ["preserve_order"] }
+
+[[bin]]
+name = "ms"
+path = "src/main.rs"
+bench = false
+
+[lib]
+name = "magic_switcheroo"
+path = "src/lib.rs"
+
+[dev-dependencies]
+k9 = "0.11.6"
