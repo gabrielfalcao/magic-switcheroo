@@ -4,7 +4,8 @@ use hex;
 use clap::{Parser, Subcommand};
 use std::fs::File;
 use std::io::prelude::*;
-use magic_switcheroo::{crc32, getmark, MetaMagic};
+use magic_switcheroo::ram::{crc32, getmark, MetaMagic};
+use magic_switcheroo::fs::{enchant_file, restore_file};
 use serde_json;
 // use magic_switcheroo::{hexdecs, CAR_SIZE};
 
@@ -87,27 +88,10 @@ pub fn main() {
 
         }
         Commands::Switch { magic, filename } => {
-            let (read, fdigest) = read_file(filename);
-
-                    let meta = MetaMagic::new(read, magic);
-            if fdigest != meta.odigest() {
-                log_error_and_exit("failed to calculate digest of given file");
-                return;
-            }
-
-            // let json = serde_json::to_string_pretty(&meta.humanized()).unwrap();
-            // let mut filemeta = File::create(format!("{}.jsonmeta", filename)).unwrap();
-            // filemeta.write_all(&json.as_bytes()).unwrap();
-
-            let mut file = File::create(filename).expect("failed to create new file");
-            file.write_all(&meta.enchant()).expect("failed to write enchanted data into file");
-
+            enchant_file(filename.to_string(), magic.to_string()).expect("failed to enchant file");
         }
         Commands::Brush { filename, magic } => {
-            let (raw, _) = read_file(filename);
-
-            let meta = MetaMagic::new(raw, magic);
-            println!("{}: {}", filename, hex::encode(&meta.magic()));
+            restore_file(filename.to_string(), magic.to_string()).expect("failed to restore file");
         }
     }
 }

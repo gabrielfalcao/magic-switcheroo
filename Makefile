@@ -11,7 +11,7 @@ MAGICSWITCHEROO_RUN		:=cargo run --bin $(MAGICSWITCHEROO_NAME) --
 export CFLAGS			:="$(shell pkg-config --cflags libmagic)"
 export CPPFLAGS			:="$(shell pkg-config --cflags libmagic)"
 export LDFLAGS			:="$(shell pkg-config --libs libmagic)"
-
+export K9_UPDATE_SNAPSHOTS	:=1
 all: test debug release
 
 $(INSTALL_PATH):
