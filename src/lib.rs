@@ -33,6 +33,12 @@ pub fn hex_to_usize(input: Vec<u8>, limit: usize) -> Result<usize, Box<dyn Error
     return Ok(bytes[0] as usize);
 }
 
+pub fn reverse_slice(data: &[u8]) -> Vec<u8> {
+    let mut data = Vec::from(data).clone();
+    data.reverse();
+    data
+}
+
 pub fn getmark() -> Vec<u8> {
     return hexdecs("c3bec3bf");
 }
@@ -126,9 +132,9 @@ impl MetaMagic {
             odigest: <[u8; 4]>::try_from(odigest).unwrap(),
             ldigest: <[u8; 4]>::try_from(ldigest).unwrap(),
             rdigest: <[u8; 4]>::try_from(rdigest).unwrap(),
-            car: <[u8; CAR_SIZE]>::try_from(car).unwrap(),
+            car: <[u8; CAR_SIZE]>::try_from(reverse_slice(&car)).unwrap(),
             machf: <[u8; 4]>::try_from(bom).unwrap(),
-            cdr: cdr.clone(),
+            cdr: reverse_slice(&cdr.clone()),
         };
     }
     pub fn from_enchanted(input: Vec<u8>, magic: &str) -> MetaMagic {
@@ -214,7 +220,7 @@ impl MetaMagic {
         // magic size
         helmet.extend(self.magic_size_hex());
         helmet.push(0x3d); // magic size suffix/tail size prefix
-                           // tail size
+        // tail size
         helmet.extend(self.tail_size_hex());
         helmet.push(0x24); // tail size suffix
         helmet.extend(&self.magic()); // Magic
@@ -254,7 +260,7 @@ impl MetaMagic {
 mod tests {
     use super::crc32;
     use super::MetaMagic;
-    use super::{hex_to_usize, usize_to_hex};
+    use super::{hex_to_usize, usize_to_hex, reverse_slice};
     use k9::assert_equal;
     use std::error::Error;
 
@@ -309,12 +315,12 @@ mod tests {
         assert_equal!(&hex::encode(meta0.rdigest()), "9c7e1a7f");
         assert_equal!(
             &hex::encode(meta0.car()),
-            "89504e470d0a1a0a0000000d494844520000000100000001080300000028cb34"
+            "34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089"
         );
-        assert_equal!(&hex::encode(meta0.cdr()), "bb00000003504c5445ffffffa7c41bc80000000a4944415408996360000000020001f47164a60000000049454e44ae426082");
-        assert_equal!(&hex::encode(meta0.head()), "0c3d32245448495349534d414749434fc3bec3bfe0ffc57747e708639c7e1a7f89504e470d0a1a0a0000000d494844520000000100000001080300000028cb34c3bec3bf");
-        assert_equal!(&hex::encode(meta0.body()), "bb00000003504c5445ffffffa7c41bc80000000a4944415408996360000000020001f47164a60000000049454e44ae426082");
-        assert_equal!(&hex::encode(meta0.enchant()), "0c3d32245448495349534d414749434fc3bec3bfe0ffc57747e708639c7e1a7f89504e470d0a1a0a0000000d494844520000000100000001080300000028cb34c3bec3bfbb00000003504c5445ffffffa7c41bc80000000a4944415408996360000000020001f47164a60000000049454e44ae426082");
+        assert_equal!(&hex::encode(meta0.cdr()), "826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb");
+        assert_equal!(&hex::encode(meta0.head()), "0c3d32245448495349534d414749434fc3bec3bfe0ffc57747e708639c7e1a7f34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089c3bec3bf");
+        assert_equal!(&hex::encode(meta0.body()), "826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb");
+        assert_equal!(&hex::encode(meta0.enchant()), "0c3d32245448495349534d414749434fc3bec3bfe0ffc57747e708639c7e1a7f34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089c3bec3bf826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb");
     }
 
     #[test]
@@ -339,47 +345,63 @@ mod tests {
         assert_equal!(&hex::encode(meta.odigest()), "e0ffc577");
         assert_equal!(&hex::encode(meta.ldigest()), "47e70863");
         assert_equal!(&hex::encode(meta.rdigest()), "9c7e1a7f");
-        assert_equal!(meta.car(), original[..32]);
-        assert_equal!(
-            Vec::from([
-                // magic_size
-                0x0c, // magic_size suffix
-                0x3d, // tail_size
-                0x32, // tail_size suffix
-                0x24, // <magic>
-                0x54, 0x48, 0x49, 0x53, 0x49, 0x53, 0x4d, 0x41, 0x47, 0x49, 0x43, 0x4f,
-                // <mach0>
-                0xc3, 0xbe, 0xc3, 0xbf, // <odigest>
-                0xe0, 0xff, 0xc5, 0x77, // <ldigest>
-                0x47, 0xe7, 0x08, 0x63, // <rdigest>
-                0x9c, 0x7e, 0x1a, 0x7f, // <car>
-                0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48,
-                0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x03, 0x00, 0x00,
-                0x00, 0x28, 0xcb, 0x34, // <machf>
-                0xc3, 0xbe, 0xc3, 0xbf,
-            ]),
-            meta.head()
-        );
-        assert_equal!(&hex::encode(meta.car()), &hex::encode(&original[..32]));
+        assert_equal!(meta.car(), reverse_slice(&original[..32]));
+        assert_equal!(&hex::encode(meta.car()), &hex::encode(&reverse_slice(&original[..32])));
         assert_equal!(
             &hex::encode(meta.car()),
-            "89504e470d0a1a0a0000000d494844520000000100000001080300000028cb34"
+            "34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089"
         );
-        assert_equal!(meta.cdr(), original[32..]);
+        assert_equal!(meta.cdr(), reverse_slice(&original[32..]));
+        assert_equal!(&hex::encode(meta.cdr()), &hex::encode(&reverse_slice(&original[32..])));
+        assert_equal!(&hex::encode(meta.cdr()), "826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb");
+        assert_equal!(&hex::encode(meta.machf()), "c3bec3bf");
         assert_equal!(
             meta.cdr(),
-            Vec::from([
+            reverse_slice(&Vec::from([
                 // <cdr>
                 0xbb, 0x00, 0x00, 0x00, 0x03, 0x50, 0x4c, 0x54, 0x45, 0xff, 0xff, 0xff, 0xa7, 0xc4,
                 0x1b, 0xc8, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x08, 0x99, 0x63, 0x60,
                 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xf4, 0x71, 0x64, 0xa6, 0x00, 0x00, 0x00, 0x00,
                 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
                 // </cdr>
-            ])
+            ]))
         );
-        assert_equal!(&hex::encode(meta.cdr()), &hex::encode(&original[32..]));
-        assert_equal!(&hex::encode(meta.cdr()), "bb00000003504c5445ffffffa7c41bc80000000a4944415408996360000000020001f47164a60000000049454e44ae426082");
-        assert_equal!(&hex::encode(meta.machf()), "c3bec3bf");
+        assert_equal!(
+            Vec::from([
+                // magic size
+                0x0c,
+                // magic_size suffix
+                0x3d,
+                // tail_size
+                0x32,
+
+                // tail_size prefix
+                0x24,
+
+                // magic
+                0x54, 0x48, 0x49, 0x53, 0x49, 0x53, 0x4d, 0x41, 0x47,
+                0x49, 0x43, 0x4f,
+
+                // mach0
+                0xc3, 0xbe, 0xc3, 0xbf,
+
+                // odigest
+                0xe0, 0xff, 0xc5, 0x77,
+                // ldigest
+                0x47, 0xe7, 0x08, 0x63,
+                // rdigest
+                0x9c, 0x7e, 0x1a, 0x7f,
+
+                // car
+                0x34, 0xcb, 0x28, 0x00, 0x00, 0x00, 0x03, 0x08, 0x01,
+                0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x52, 0x44,
+                0x48, 0x49, 0x0d, 0x00, 0x00, 0x00, 0x0a, 0x1a, 0x0a,
+                0x0d, 0x47, 0x4e, 0x50, 0x89,
+                // machf
+                0xc3, 0xbe, 0xc3, 0xbf,
+            ]),
+            meta.head()
+        );
     }
     #[test]
     fn test_enchant_string() {
@@ -387,19 +409,19 @@ mod tests {
             test_string("ᎳᎡᎵᏓᎣᏅᎡ ᏔᎣ ᏅᏯ ᎳᎣᏛᎵᏗ, ᏔᎯᎡ ᎨᎡᎠᎤᏔᏯ ᎠᎾᏗ ᏔᎯᎡ ᎨᎠᎤᏗ"),
             "1CEB00DAFEFF",
         );
-        assert_equal!(&hex::encode(ck.enchant()), "0c3d5224314345423030444146454646c3bec3bfe6be4e726bf0188194b224e3e18eb3e18ea1e18eb5e18f93e18ea3e18f85e18ea120e18f94e18ea320e18f85c3bec3bfe18faf20e18eb3e18ea3e18f9be18eb5e18f972c20e18f94e18eafe18ea120e18ea8e18ea1e18ea0e18ea4e18f94e18faf20e18ea0e18ebee18f9720e18f94e18eafe18ea120e18ea8e18ea0e18ea4e18f97");
+        assert_equal!(&hex::encode(ck.enchant()), "0c3d5224314345423030444146454646c3bec3bfe6be4e726bf0188194b224e3858fe120a38ee1948fe120a18ee1858fe1a38ee1938fe1b58ee1a18ee1b38ee1c3bec3bf978fe1a48ee1a08ee1a88ee120a18ee1af8ee1948fe120978fe1be8ee1a08ee120af8fe1948fe1a48ee1a08ee1a18ee1a88ee120a18ee1af8ee1948fe1202c978fe1b58ee19b8fe1a38ee1b38ee120af8fe1");
 
         let ma = MetaMagic::new(
             test_string("њелцоме то мѕ њорлд, тхе беаутѕ анд тхе бауд"),
             "1CEB00DABA55",
         );
-        assert_equal!(&hex::encode(ma.enchant()), "0c3d2f24314345423030444142413535c3bec3bfb4cc47bd6c6fecabac37934fd19ad0b5d0bbd186d0bed0bcd0b520d182d0be20d0bcd19520d19ad0bed180d0c3bec3bfbbd0b42c20d182d185d0b520d0b1d0b5d0b0d183d182d19520d0b0d0bdd0b420d182d185d0b520d0b1d0b0d183d0b4");
+        assert_equal!(&hex::encode(ma.enchant()), "0c3d2f24314345423030444142413535c3bec3bfb4cc47bd6c6fecabac37934fd080d1bed09ad12095d1bcd020bed082d120b5d0bcd0bed086d1bbd0b5d09ad1c3bec3bfb4d083d1b0d0b1d020b5d085d182d120b4d0bdd0b0d02095d182d183d1b0d0b5d0b1d020b5d085d182d1202cb4d0bb");
 
         let th = MetaMagic::new(
             test_string("ตยเลวสย รว ส่ ตวอเงะ รีย ทิย้ดร่ ท้คง รีย ทิ้ดง"),
             "B4BYL0N1AN42",
         );
-        assert_equal!(&hex::encode(th.enchant()), "0c3d5d24423442594c304e31414e3432c3bec3bf75e551a112b79542489c61cde0b895e0b8a2e0b980e0b8a5e0b8a7e0b8aae0b8a220e0b8a3e0b8a720e0b8aac3bec3bfe0b98820e0b895e0b8a7e0b8ade0b980e0b887e0b8b020e0b8a3e0b8b5e0b8a220e0b897e0b8b4e0b8a2e0b989e0b894e0b8a3e0b98820e0b897e0b989e0b884e0b88720e0b8a3e0b8b5e0b8a220e0b897e0b8b4e0b989e0b894e0b887");
+        assert_equal!(&hex::encode(th.enchant()), "0c3d5d24423442594c304e31414e3432c3bec3bf75e551a112b79542489c61cdaab8e020a7b8e0a3b8e020a2b8e0aab8e0a7b8e0a5b8e080b9e0a2b8e095b8e0c3bec3bf87b8e094b8e089b9e0b4b8e097b8e020a2b8e0b5b8e0a3b8e02087b8e084b8e089b9e097b8e02088b9e0a3b8e094b8e089b9e0a2b8e0b4b8e097b8e020a2b8e0b5b8e0a3b8e020b0b8e087b8e080b9e0adb8e0a7b8e095b8e02088b9e0");
     }
 
     #[test]
