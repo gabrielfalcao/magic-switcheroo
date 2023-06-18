@@ -6,15 +6,31 @@ use std::error::Error;
 use std::fmt;
 
 pub const CAR_SIZE: usize = 32;
+pub const DIGEST_SIZE: usize = 4;
 pub const CASTAGNOLI: Crc<u32> = Crc::<u32>::new(&CRC_32_ISCSI);
+pub type Digest = [u8; DIGEST_SIZE];
+pub type Car = [u8; CAR_SIZE];
+
+pub fn digest_from_vec8(data: Vec<u8>) -> Result<Digest, Vec<u8>> {
+    let mut data = data.clone();
+    while data.len() > DIGEST_SIZE {
+        if data[0] == 0 as u8 {
+            data.remove(0);
+        } else {
+            break
+        }
+    }
+    Ok(<Digest>::try_from(data)?)
+}
+
 
 #[derive(Debug, Clone)]
 pub struct DigestMismatch {
-    expected: [u8; 4],
-    actual: [u8; 4],
+    expected: Digest,
+    actual: Digest,
 }
 impl DigestMismatch {
-    pub fn new(expected: [u8; 4], actual: [u8; 4]) -> DigestMismatch {
+    pub fn new(expected: Digest, actual: Digest) -> DigestMismatch {
         DigestMismatch {
             expected: expected.clone(),
             actual: actual.clone(),
@@ -45,7 +61,7 @@ pub fn hexdeca(a: &[u8]) -> Vec<u8> {
     return hexdecs(&hex::encode(&a));
 }
 pub fn hexdecu32(v: u32) -> Vec<u8> {
-    return hexdecs(&if v <= 16 {
+    return hexdecs(&if v <= 16 || v.to_string().len() % 2 == 1 {
         format!("0{:x}", v)
     } else {
         format!("{:x}", v)
@@ -55,11 +71,11 @@ pub fn crc32(data: &[u8]) -> Vec<u8> {
     return hexdecu32(CASTAGNOLI.checksum(&data));
 }
 pub fn usize_to_hex(value: usize) -> Result<Vec<u8>, Box<dyn Error>> {
-    return Ok(hex::decode(&if value <= 16 {
+    Ok(hex::decode(&if value <= 16 || value.to_string().len() % 2 == 1{
         format!("0{:x}", value)
     } else {
         format!("{:x}", value)
-    })?);
+    })?)
 }
 pub fn hex_to_usize(input: Vec<u8>, limit: usize) -> Result<usize, Box<dyn Error>> {
     let bytes = Vec::from(&input[..limit]);
@@ -81,12 +97,12 @@ pub struct MetaMagic {
     tail_size: usize,    // arbitrary
     magic_size: usize,   // 12 (minimum)
     magic: Vec<u8>,      // 12 (presumed)
-    mach0: [u8; 4],      // +4=16
-    odigest: [u8; 4],    // +4=20
-    ldigest: [u8; 4],    // +4=24
-    rdigest: [u8; 4],    // +4=28
-    car: [u8; CAR_SIZE], // +32= 60 // contains original magic numbers
-    machf: [u8; 4],      // 64
+    mach0: Digest,      // +4=16
+    odigest: Digest,    // +4=20
+    ldigest: Digest,    // +4=24
+    rdigest: Digest,    // +4=28
+    car: Car, // +32= 60 // contains original magic numbers
+    machf: Digest,      // 64
     cdr: Vec<u8>,        //..tail_size
 }
 
@@ -138,7 +154,7 @@ impl HumanizedMagic {
 }
 
 impl MetaMagic {
-    pub fn new(input: Vec<u8>, magic: &str) -> MetaMagic {
+    pub fn new(input: Vec<u8>, magic: &str) -> Result<MetaMagic, Box<dyn Error>>  {
         let magic = magic.clone().to_string();
         let bom = getmark();
         let magic_size: usize = magic.len();
@@ -157,32 +173,32 @@ impl MetaMagic {
         let ldigest = crc32(&car);
         let rdigest = crc32(&cdr);
 
-        return MetaMagic {
+        return Ok(MetaMagic {
             tail_size: cdr.len(),
             magic_size: magic_size,
             magic: magic.into(),
-            mach0: <[u8; 4]>::try_from(bom.clone()).unwrap(),
-            odigest: <[u8; 4]>::try_from(odigest).unwrap(),
-            ldigest: <[u8; 4]>::try_from(ldigest).unwrap(),
-            rdigest: <[u8; 4]>::try_from(rdigest).unwrap(),
-            car: <[u8; CAR_SIZE]>::try_from(reverse_slice(&car)).unwrap(),
-            machf: <[u8; 4]>::try_from(bom).unwrap(),
+            mach0: digest_from_vec8(bom.clone()).unwrap(),
+            odigest: digest_from_vec8(odigest).unwrap(),
+            ldigest: digest_from_vec8(ldigest).unwrap(),
+            rdigest: digest_from_vec8(rdigest).unwrap(),
+            car: <Car>::try_from(reverse_slice(&car)).unwrap(),
+            machf: <Digest>::try_from(bom).unwrap(),
             cdr: reverse_slice(&cdr.clone()),
-        };
+        });
     }
-    pub fn from_enchanted(input: Vec<u8>, magic: &str) -> MetaMagic {
+    pub fn from_enchanted(input: Vec<u8>, magic: &str) -> Result<MetaMagic, Box<dyn Error>>  {
         let digest_size: usize = 4;
         let mut magic_size: usize = magic.len();
         assert!(magic_size == 12);
 
         let mut input = input.clone();
-        magic_size = hex_to_usize(Vec::from([input.remove(0)]), 1).unwrap();
+        magic_size = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
         assert_eq!(magic_size, 12);
-        let magic_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1).unwrap();
+        let magic_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
         assert_eq!(magic_suffix, 0x3d);
-        let tail_size = hex_to_usize(Vec::from([input.remove(0)]), 1).unwrap();
+        let tail_size = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
         assert_eq!(tail_size, 50);
-        let tail_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1).unwrap();
+        let tail_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
         assert_eq!(tail_suffix, 0x24);
 
         let magic: Vec<u8> = Vec::from(&input[..magic_size]);
@@ -201,18 +217,18 @@ impl MetaMagic {
         let machf: Vec<u8> = Vec::from(&input[..digest_size]);
         let input = Vec::from(&input[digest_size..]);
 
-        return MetaMagic {
+        return Ok(MetaMagic {
             tail_size: tail_size,
             magic_size: magic.len(),
             magic: magic.into(),
-            mach0: <[u8; 4]>::try_from(mach0).unwrap(),
-            odigest: <[u8; 4]>::try_from(odigest).unwrap(),
-            ldigest: <[u8; 4]>::try_from(ldigest).unwrap(),
-            rdigest: <[u8; 4]>::try_from(rdigest).unwrap(),
-            car: <[u8; CAR_SIZE]>::try_from(car).unwrap(),
-            machf: <[u8; 4]>::try_from(machf).unwrap(),
+            mach0: <Digest>::try_from(mach0).unwrap(),
+            odigest: <Digest>::try_from(odigest).unwrap(),
+            ldigest: <Digest>::try_from(ldigest).unwrap(),
+            rdigest: <Digest>::try_from(rdigest).unwrap(),
+            car: <Car>::try_from(car).unwrap(),
+            machf: <Digest>::try_from(machf).unwrap(),
             cdr: Vec::from(input),
-        };
+        });
     }
 
     pub fn humanized(&self) -> HumanizedMagic {
@@ -253,7 +269,7 @@ impl MetaMagic {
         // magic size
         helmet.extend(self.magic_size_hex());
         helmet.push(0x3d); // magic size suffix/tail size prefix
-                           // tail size
+        // tail size
         helmet.extend(self.tail_size_hex());
         helmet.push(0x24); // tail size suffix
         helmet.extend(&self.magic()); // Magic
@@ -293,8 +309,10 @@ mod tests {
     use std::error::Error;
 
     #[test]
-    fn test_usize_to_hex() {
-        assert_equal!(hex::encode(usize_to_hex(12).unwrap()), "0c");
+    fn test_usize_to_hex() -> Result<(), Box<dyn Error>> {
+        assert_equal!(hex::encode(usize_to_hex(12)?), "0c");
+        assert_equal!(hex::encode(usize_to_hex(817)?), "0331");
+        Ok(())
     }
     #[test]
     fn test_hex_to_u8() -> Result<(), Box<dyn Error>> {
@@ -322,9 +340,9 @@ mod tests {
         data.clone().as_bytes().to_vec()
     }
     #[test]
-    fn test_metamagic_eq() {
-        let meta0 = MetaMagic::new(test_data(), "THISISMAGICO");
-        let meta1 = MetaMagic::new(test_data(), "THISISMAGICO");
+    fn test_metamagic_eq() -> Result<(), Box<dyn Error>> {
+        let meta0 = MetaMagic::new(test_data(), "THISISMAGICO")?;
+        let meta1 = MetaMagic::new(test_data(), "THISISMAGICO")?;
 
         assert_equal!(test_data().len(), 82);
         assert_equal!(meta0, meta1);
@@ -349,14 +367,15 @@ mod tests {
         assert_equal!(&hex::encode(meta0.head()), "0c3d32245448495349534d414749434fc3bec3bfe0ffc57747e708639c7e1a7f34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089c3bec3bf");
         assert_equal!(&hex::encode(meta0.body()), "826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb");
         assert_equal!(&hex::encode(meta0.enchant()), "0c3d32245448495349534d414749434fc3bec3bfe0ffc57747e708639c7e1a7f34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089c3bec3bf826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb");
+        Ok(())
     }
 
     #[test]
-    fn test_metamagic_datum() {
+    fn test_metamagic_datum() -> Result<(), Box<dyn Error>> {
         let magic = String::from("THISISMAGICO");
         let original = test_data();
 
-        let meta = MetaMagic::new(original.clone(), &magic.clone());
+        let meta = MetaMagic::new(original.clone(), &magic.clone())?;
 
         assert_equal!(meta.magic_size, 12);
         assert_equal!(meta.tail_size, 50);
@@ -420,39 +439,43 @@ mod tests {
             ]),
             meta.head()
         );
+        Ok(())
     }
     #[test]
-    fn test_enchant_string() {
+    fn test_enchant_string() -> Result<(), Box<dyn Error>> {
         let ck = MetaMagic::new(
             test_string("ᎳᎡᎵᏓᎣᏅᎡ ᏔᎣ ᏅᏯ ᎳᎣᏛᎵᏗ, ᏔᎯᎡ ᎨᎡᎠᎤᏔᏯ ᎠᎾᏗ ᏔᎯᎡ ᎨᎠᎤᏗ"),
             "1CEB00DAFEFF",
-        );
+        )?;
         assert_equal!(&hex::encode(ck.enchant()), "0c3d5224314345423030444146454646c3bec3bfe6be4e726bf0188194b224e3858fe120a38ee1948fe120a18ee1858fe1a38ee1938fe1b58ee1a18ee1b38ee1c3bec3bf978fe1a48ee1a08ee1a88ee120a18ee1af8ee1948fe120978fe1be8ee1a08ee120af8fe1948fe1a48ee1a08ee1a18ee1a88ee120a18ee1af8ee1948fe1202c978fe1b58ee19b8fe1a38ee1b38ee120af8fe1");
 
         let ma = MetaMagic::new(
             test_string("њелцоме то мѕ њорлд, тхе беаутѕ анд тхе бауд"),
             "1CEB00DABA55",
-        );
+        )?;
         assert_equal!(&hex::encode(ma.enchant()), "0c3d2f24314345423030444142413535c3bec3bfb4cc47bd6c6fecabac37934fd080d1bed09ad12095d1bcd020bed082d120b5d0bcd0bed086d1bbd0b5d09ad1c3bec3bfb4d083d1b0d0b1d020b5d085d182d120b4d0bdd0b0d02095d182d183d1b0d0b5d0b1d020b5d085d182d1202cb4d0bb");
 
-        let th = MetaMagic::new(
+         let th = MetaMagic::new(
             test_string("ตยเลวสย รว ส่ ตวอเงะ รีย ทิย้ดร่ ท้คง รีย ทิ้ดง"),
             "B4BYL0N1AN42",
-        );
+        )?;
         assert_equal!(&hex::encode(th.enchant()), "0c3d5d24423442594c304e31414e3432c3bec3bf75e551a112b79542489c61cdaab8e020a7b8e0a3b8e020a2b8e0aab8e0a7b8e0a5b8e080b9e0a2b8e095b8e0c3bec3bf87b8e094b8e089b9e0b4b8e097b8e020a2b8e0b5b8e0a3b8e02087b8e084b8e089b9e097b8e02088b9e0a3b8e094b8e089b9e0a2b8e0b4b8e097b8e020a2b8e0b5b8e0a3b8e020b0b8e087b8e080b9e0adb8e0a7b8e095b8e02088b9e0");
+        Ok(())
     }
 
     #[test]
-    fn test_metamagic_restore() {
+    fn test_metamagic_restore() -> Result<(), Box<dyn Error>> {
         let magic = String::from("THISISMAGICO");
 
-        let meta0 = MetaMagic::new(test_data(), &magic.clone());
+        let meta0 = MetaMagic::new(test_data(), &magic.clone())?;
         let enchanted = meta0.enchant();
 
         assert_equal!(meta0.magic_size, 12);
         assert_equal!(meta0.tail_size, 50);
 
-        let meta1 = MetaMagic::from_enchanted(enchanted, &magic.clone());
+        let meta1 = MetaMagic::from_enchanted(enchanted, &magic.clone())?;
         assert_equal!(meta0, meta1);
+
+        Ok(())
     }
 }

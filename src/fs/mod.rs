@@ -22,13 +22,13 @@ pub fn write_file(filename: String, data: Vec<u8>) -> Result<(), Box<dyn Error>>
 pub fn enchant_file(filename: String, magic: String) -> Result<(), Box<dyn Error>> {
     let (read, _) = read_file(&filename);
 
-    let meta = MetaMagic::new(read, &magic);
+    let meta = MetaMagic::new(read, &magic)?;
     Ok(write_file(filename, meta.enchant())?)
 }
 
 pub fn restore_file(filename: String, magic: String) -> Result<(), Box<dyn Error>> {
     let (raw, _) = read_file(&filename);
-    let meta = MetaMagic::from_enchanted(raw, &magic);
+    let meta = MetaMagic::from_enchanted(raw, &magic)?;
     let restored = meta.orig();
     write_file(filename, restored)?;
     Ok(())
