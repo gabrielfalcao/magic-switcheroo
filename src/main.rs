@@ -1,12 +1,13 @@
 // use std::path::{Path};
 use ansi_term;
-use hex;
 use clap::{Parser, Subcommand};
-use std::fmt;
-use std::error::Error;
-use magic_switcheroo::ram::{getmark, MetaMagic, Digest};
-use magic_switcheroo::fs::{enchant_file, restore_file, read_file, write_file};
+use hex;
+use magic_switcheroo::fs::{enchant_file, read_file, restore_file, write_file};
+use magic_switcheroo::ram::{getmark, Digest, MetaMagic};
 use serde_json;
+use std::error::Error;
+use std::fmt;
+pub use magic_switcheroo::errors::MSError;
 // use magic_switcheroo::{hexdecs, CAR_SIZE};
 
 #[derive(Parser)]
@@ -40,7 +41,6 @@ impl fmt::Display for DigestMismatch {
         )
     }
 }
-
 
 #[derive(Subcommand)]
 enum Commands {
@@ -79,16 +79,16 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     match &args.command {
         Commands::Decode { filename } => {
-            let (raw, _digest) = read_file(filename);
+            let (raw, _digest) = read_file(filename)?;
 
             let meta = MetaMagic::new(raw, "FOOBARBAZ137")?;
             println!("{}: {}", filename, hex::encode(&meta.magic()));
         }
         Commands::Jsonify { magic, filename } => {
-            let (read, _) = read_file(filename);
+            let (read, _) = read_file(filename)?;
 
             let meta = MetaMagic::new(read, magic)?;
-            let json = serde_json::to_string_pretty(&meta.humanized())?;
+            let json = serde_json::to_string_pretty(&meta)?;
 
             write_file(filename.clone(), json.as_bytes().to_vec())?;
         }
@@ -102,3 +102,37 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+// #[cfg(test)]
+// mod e2e_tests {
+//     use k9::assert_equal;
+//     use magic_switcheroo::fs::enchant_file;
+//     use magic_switcheroo::fs::read_file;
+//     use magic_switcheroo::fs::restore_file;
+//     use std::error::Error;
+//     use std::path::Path;
+
+//     #[test]
+//     fn test_enchant_and_restore_file() -> Result<(), Box<dyn Error>> {
+//         let filename: String = "o-really.png".to_string();
+//         let magic: String = "THISISMAGICO".to_string();
+
+//         let (original_contents, original_checksum) = read_file(&filename);
+
+//         // Given an image file exists
+//         assert!(Path::new(&filename).exists());
+
+//         // When I enchant it
+//         enchant_file(filename.clone(), magic.clone())?;
+//         // And subsequently restore it
+//         restore_file(filename.clone(), magic.clone())?;
+
+//         // Then its checksum should match that of the original
+//         let (current_contents, current_checksum) = read_file(&filename);
+
+//         // Then its contents should also match that of the original
+//         assert_equal!(current_checksum, original_checksum);
+//         assert_equal!(current_contents, original_contents);
+//         Ok(())
+//     }
+// }
