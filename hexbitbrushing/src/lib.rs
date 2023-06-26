@@ -95,6 +95,16 @@ mod test_unpad32 {
         assert_equal!(result[0], 0xfeff);
         Ok(())
     }
+
+    #[test]
+    fn test_unpad32_beca_bf() -> Result<(), HexError> {
+        let padded = pad32(0xc3bec3bf)?;
+        let result = unpad32(padded);
+        assert_equal!(result.len(), 1);
+        assert_equal!(result[0], 0xc3bec3bf);
+        Ok(())
+    }
+
 }
 
 #[cfg(test)]
