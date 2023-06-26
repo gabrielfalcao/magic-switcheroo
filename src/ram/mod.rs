@@ -425,19 +425,19 @@ mod tests {
         Ok(())
     }
 
-    // #[test]
-    // fn test_metamagic_restore() -> Result<(), MSError> {
-    //     let magic = String::from("THISISMAGICO");
+    #[test]
+    fn test_metamagic_restore() -> Result<(), MSError> {
+        let magic = String::from("THISISMAGICO");
 
-    //     let meta0 = MetaMagic::new(test_data(), &magic.clone())?;
-    //     let enchanted = meta0.enchant()?;
+        let meta0 = MetaMagic::new(test_data(), &magic.clone())?;
+        let enchanted = meta0.enchant()?;
 
-    //     assert_equal!(meta0.magic_size, 12);
-    //     assert_equal!(meta0.tail_size, 50);
+        assert_equal!(meta0.magic_size, 12);
+        assert_equal!(meta0.tail_size, 50);
 
-    //     let meta1 = MetaMagic::from_enchanted(enchanted, &magic.clone())?;
-    //     assert_equal!(meta0, meta1);
+        let meta1 = MetaMagic::from_enchanted(enchanted, &magic.clone())?;
+        assert_equal!(meta0, meta1);
 
-    //     Ok(())
-    // }
+        Ok(())
+    }
 }
