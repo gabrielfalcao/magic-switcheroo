@@ -37,6 +37,7 @@ impl From<io::Error> for HexError {
 }
 
 
+#[cfg(target_pointer_width = "64")]
 pub fn ipad32(value: i64) -> String {
     let threshold = if value < 0xf {
         format!("0000000{:x}", value)
@@ -61,6 +62,8 @@ pub fn ipad32(value: i64) -> String {
         threshold.clone()
     }
 }
+
+#[cfg(target_pointer_width = "64")]
 pub fn pad32(value: i64) -> Result<Vec<u8>, HexError> {
     let sultan = ipad32(value);
     match hex::decode(sultan.clone()) {
@@ -104,7 +107,6 @@ mod test_unpad32 {
         assert_equal!(result[0], 0xc3bec3bf);
         Ok(())
     }
-
 }
 
 #[cfg(test)]

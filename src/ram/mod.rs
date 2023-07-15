@@ -1,3 +1,4 @@
+#![allow(unused)]
 use crc::{Crc, CRC_32_ISCSI};
 use hex;
 use serde::{Deserialize, Serialize};
@@ -6,7 +7,7 @@ use std::fmt;
 
 use crate::errors::MSError;
 
-use crate::pad::pad64;
+use crate::pad::{pad32, unpad32};
 
 pub const CAR_SIZE: usize = 32;
 pub const DIGEST_SIZE: usize = 4;
@@ -62,18 +63,14 @@ pub fn hexdeca(a: &[u8]) -> Result<Vec<u8>, MSError> {
     Ok(hexdecs(&hex::encode(&a))?)
 }
 pub fn hexdecu32(value: u32) -> Result<Vec<u8>, MSError> {
-    let padded = pad64(value as i64)?;
-    Ok(hexdecs(&padded)?)
+    let padded = pad32(value as i64)?;
+    Ok(hexdeca(&padded)?)
 }
 pub fn crc32(data: &[u8]) -> Result<Vec<u8>, MSError> {
     hexdecu32(CASTAGNOLI.checksum(&data))
 }
 pub fn usize_to_hex(value: usize) -> Result<Vec<u8>, MSError> {
-    let padded = pad64(value as i64)?;
-    match hex::decode(&padded) {
-        Err(e) => Err(MSError::HexDecodingError(format!("failed to decode (padded) hex: {padded} {e}"))),
-        Ok(idokie) => Ok(idokie),
-    }
+    return Ok(pad32(value as i64)?);
 }
 pub fn hex_to_usize(input: Vec<u8>, limit: usize) -> Result<usize, MSError> {
     let bytes = Vec::from(&input[..limit]);
@@ -139,14 +136,14 @@ impl MetaMagic {
     }
     pub fn from_enchanted(input: Vec<u8>, magic: &str) -> Result<MetaMagic, MSError>  {
         let digest_size: usize = 4;
-        let mut magic_size: usize = magic.len();
+        let mut magic_size: i64 = magic.len() as i64;
         assert!(magic_size == 12);
 
         let mut input = input.clone();
-        magic_size = hex_to_usize(Vec::from([input.remove(0),input.remove(0),input.remove(0),input.remove(0)]), 1)?;
+        magic_size = unpad32(Vec::from([input.remove(0),input.remove(0),input.remove(0),input.remove(0)]))[0];
         let magic_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
         assert_eq!(magic_suffix, 0x3d);
-        let tail_size = hex_to_usize(Vec::from([input.remove(0), input.remove(0), input.remove(0), input.remove(0)]), 1)?;
+        let tail_size = unpad32(Vec::from([input.remove(0), input.remove(0), input.remove(0), input.remove(0)]))[0];
 
         let tail_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
         assert_eq!(tail_suffix, 0x24);
