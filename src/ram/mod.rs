@@ -106,10 +106,9 @@ impl MetaMagic {
         let magic = magic.clone().to_string();
         let bom = getmark();
         let magic_size: usize = magic.len();
-        assert!(magic_size == 12);
+
         let bom_size: usize = bom.len();
         let input_size = input.len();
-        assert!(bom_size == 4);
 
         let odigest = crc32(&input)?;
         let car = Vec::from(&input[..CAR_SIZE]);
@@ -310,7 +309,7 @@ mod tests {
         assert_equal!(hex::encode(meta0.body()), hex::encode(meta1.cdr()));
         assert_equal!(hex::encode(meta0.cdr()), hex::encode(meta1.body()));
         assert_equal!(hex::encode(meta0.cdr()), hex::encode(meta1.cdr()));
-        assert_equal!(&hex::encode(meta0.magic()), "5448495349534d414749434f");
+        assert_equal!(&hex::encode(meta0.magic()),   "5448495349534d414749434f");
         assert_equal!(&hex::encode(meta0.odigest()), "487cad4d");
         assert_equal!(&hex::encode(meta0.ldigest()), "aff0df6b");
         assert_equal!(&hex::encode(meta0.rdigest()), "2a00551c");

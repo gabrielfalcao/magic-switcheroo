@@ -6,8 +6,8 @@ MAGICSWITCHEROO_NAME		:=ms
 MAGICSWITCHEROO_DEBUG_BIN	:=target/debug/$(MAGICSWITCHEROO_NAME)
 MAGICSWITCHEROO_RELEASE_BIN	:=target/release/$(MAGICSWITCHEROO_NAME)
 MAGICSWITCHEROO_BIN		:=$(MAGICSWITCHEROO_RELEASE_BIN)
-MAGICSWITCHEROO_RUN		:=$(MAGICSWITCHEROO_BIN)
-MAGICSWITCHEROO_RUN		:=cargo run --bin $(MAGICSWITCHEROO_NAME) --
+MS				:=$(MAGICSWITCHEROO_BIN)
+MS				:=cargo run --bin $(MAGICSWITCHEROO_NAME) --
 export CFLAGS			:="$(shell pkg-config --cflags libmagic)"
 export CPPFLAGS			:="$(shell pkg-config --cflags libmagic)"
 export LDFLAGS			:="$(shell pkg-config --libs libmagic)"
@@ -25,14 +25,14 @@ $(MAGICSWITCHEROO_DEBUG_BIN): $(INSTALL_PATH)
 
 run: $(MAGICSWITCHEROO_DEBUG_BIN) $(MAGICSWITCHEROO_RELEASE_BIN)
 	@mkdir -p target
-	@cp pix.jpg target/image.jpg
-	$(MAGICSWITCHEROO_RUN) decode target/image.jpg
-	@cp pix.jpg target/image.jpg
-	$(MAGICSWITCHEROO_RUN) jsonify target/image.jpg --magic=SSENTERPRISE
-	@cp pix.jpg target/image.jpg
-	$(MAGICSWITCHEROO_RUN) switch target/image.jpg --magic=SSENTERPRISE
-	@cp pix.jpg target/image.jpg
-	$(MAGICSWITCHEROO_RUN) brush target/image.jpg --magic=SSENTERPRISE
+	@cp pix.jpg target/mspix.jpg
+	$(MS) e target/mspix.jpg --magic=SSENTERPRISE
+	$(MS) r target/mspix.jpg --magic=SSENTERPRISE
+	diff pix.jpg target/mspix.jpg
+	@cp switcheroo.jpg target/msswitcheroo.jpg
+	$(MS) e target/msswitcheroo.jpg --magic=AINTSOMETHIN
+	$(MS) r target/msswitcheroo.jpg --magic=AINTSOMETHIN
+	diff switcheroo.jpg target/msswitcheroo.jpg
 
 release: check fix | $(MAGICSWITCHEROO_RELEASE_BIN)
 	install $(MAGICSWITCHEROO_RELEASE_BIN) $(INSTALL_PATH)
