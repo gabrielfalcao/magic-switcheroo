@@ -42,15 +42,15 @@ impl fmt::Display for DigestMismatch {
 
 #[derive(Subcommand)]
 enum Commands {
-    #[command(arg_required_else_help(true))]//, help = "enchants a file with the given 96 bits magic word"]
-    Enchant {
+    #[command(arg_required_else_help(true), about = "enchants a file with the given 96 bits magic word")]
+    E {
         #[arg(short, long)]
         magic: String,
 
         filename: String,
     },
-    #[command(arg_required_else_help(true))]//, help = "repels the previous enchantment applied to a file with the given 96 bits magic word"]
-    Repel {
+    #[command(arg_required_else_help(true), about = "repels the previous enchantment applied to a file with the given 96 bits magic word")]
+    R {
         #[arg(short, long)]
         magic: String,
 
@@ -67,10 +67,10 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     let _bom = getmark();
 
     match &args.command {
-        Commands::Enchant { magic, filename } => {
+        Commands::E { magic, filename } => {
             enchant_file(filename.to_string(), magic.to_string())?;
         }
-        Commands::Repel { filename, magic } => {
+        Commands::R { filename, magic } => {
             restore_file(filename.to_string(), magic.to_string())?;
         }
     }

@@ -213,17 +213,17 @@ impl MetaMagic {
         let mut helmet: Vec<u8> = Vec::new();
         // magic size
         helmet.extend(self.magic_size_hex()?);
-        helmet.push(0x3d); // magic size suffix/tail size prefix
+        helmet.push(0x3d);              // magic size suffix/tail size prefix
         // tail size
         helmet.extend(self.tail_size_hex()?);
-        helmet.push(0x24); // tail size suffix
-        helmet.extend(&self.magic()); // Magic
-        helmet.extend(&self.mach0()); // Mach0
+        helmet.push(0x24);              // tail size suffix
+        helmet.extend(&self.magic());   // Magic
+        helmet.extend(&self.mach0());   // Mach0
         helmet.extend(&self.odigest()); // ODigest
         helmet.extend(&self.ldigest()); // LDigest
         helmet.extend(&self.rdigest()); // RDigest
-        helmet.extend(&self.car()); // ORIG
-        helmet.extend(&self.machf()); // Mach1
+        helmet.extend(&self.car());     // ORIG
+        helmet.extend(&self.machf());   // Mach1
         Ok(helmet)
     }
 
