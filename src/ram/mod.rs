@@ -1,3 +1,4 @@
+#![allow(unused)]
 use crc::{Crc, CRC_32_ISCSI};
 use hex;
 use serde::{Deserialize, Serialize};
@@ -6,7 +7,7 @@ use std::fmt;
 
 use crate::errors::MSError;
 
-use crate::pad::pad64;
+use crate::pad::{pad32, unpad32};
 
 pub const CAR_SIZE: usize = 32;
 pub const DIGEST_SIZE: usize = 4;
@@ -62,18 +63,14 @@ pub fn hexdeca(a: &[u8]) -> Result<Vec<u8>, MSError> {
     Ok(hexdecs(&hex::encode(&a))?)
 }
 pub fn hexdecu32(value: u32) -> Result<Vec<u8>, MSError> {
-    let padded = pad64(value as i64)?;
-    Ok(hexdecs(&padded)?)
+    let padded = pad32(value as i64)?;
+    Ok(hexdeca(&padded)?)
 }
 pub fn crc32(data: &[u8]) -> Result<Vec<u8>, MSError> {
     hexdecu32(CASTAGNOLI.checksum(&data))
 }
 pub fn usize_to_hex(value: usize) -> Result<Vec<u8>, MSError> {
-    let padded = pad64(value as i64)?;
-    match hex::decode(&padded) {
-        Err(e) => Err(MSError::HexDecodingError(format!("failed to decode (padded) hex: {padded} {e}"))),
-        Ok(idokie) => Ok(idokie),
-    }
+    return Ok(pad32(value as i64)?);
 }
 pub fn hex_to_usize(input: Vec<u8>, limit: usize) -> Result<usize, MSError> {
     let bytes = Vec::from(&input[..limit]);
@@ -139,18 +136,20 @@ impl MetaMagic {
     }
     pub fn from_enchanted(input: Vec<u8>, magic: &str) -> Result<MetaMagic, MSError>  {
         let digest_size: usize = 4;
-        let mut magic_size: usize = magic.len();
+        let mut magic_size: i64 = magic.len() as i64;
         assert!(magic_size == 12);
 
         let mut input = input.clone();
-        magic_size = hex_to_usize(Vec::from([input.remove(0),input.remove(0),input.remove(0),input.remove(0)]), 1)?;
+        magic_size = unpad32(Vec::from([input.remove(0),input.remove(0),input.remove(0),input.remove(0)]))[0];
         let magic_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
         assert_eq!(magic_suffix, 0x3d);
-        let tail_size = hex_to_usize(Vec::from([input.remove(0), input.remove(0), input.remove(0), input.remove(0)]), 1)?;
+        let tail_size = unpad32(Vec::from([input.remove(0), input.remove(0), input.remove(0), input.remove(0)]))[0];
 
         let tail_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
         assert_eq!(tail_suffix, 0x24);
 
+        let magic_size:usize = magic_size as usize;
+        let tail_size:usize = tail_size as usize;
         let magic: Vec<u8> = Vec::from(&input[..magic_size]);
         let input = Vec::from(&input[magic_size..]);
 
@@ -419,9 +418,9 @@ mod tests {
 
         let th = MetaMagic::new(
             test_string("ตยเลวสย รว ส่ ตวอเงะ รีย ทิย้ดร่ ท้คง รีย ทิ้ดง"),
-            "B4BYL0N1AN42",
+            "B4BYL0N1AN86",
         )?;
-        assert_equal!(&hex::encode(th.enchant()?), "0000000c3d0000005d24423442594c304e31414e3432c3bec3bf75e551a112b79542489c61cdaab8e020a7b8e0a3b8e020a2b8e0aab8e0a7b8e0a5b8e080b9e0a2b8e095b8e0c3bec3bf87b8e094b8e089b9e0b4b8e097b8e020a2b8e0b5b8e0a3b8e02087b8e084b8e089b9e097b8e02088b9e0a3b8e094b8e089b9e0a2b8e0b4b8e097b8e020a2b8e0b5b8e0a3b8e020b0b8e087b8e080b9e0adb8e0a7b8e095b8e02088b9e0");
+        assert_equal!(&hex::encode(th.enchant()?), "0000000c3d0000005d24423442594c304e31414e3836c3bec3bf75e551a112b79542489c61cdaab8e020a7b8e0a3b8e020a2b8e0aab8e0a7b8e0a5b8e080b9e0a2b8e095b8e0c3bec3bf87b8e094b8e089b9e0b4b8e097b8e020a2b8e0b5b8e0a3b8e02087b8e084b8e089b9e097b8e02088b9e0a3b8e094b8e089b9e0a2b8e0b4b8e097b8e020a2b8e0b5b8e0a3b8e020b0b8e087b8e080b9e0adb8e0a7b8e095b8e02088b9e0");
         Ok(())
     }
 
