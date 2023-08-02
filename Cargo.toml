@@ -1,12 +1,12 @@
 [package]
 name = "magic-switcheroo"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 authors = ["Gabriel Falcão <gabriel@nacaolivre.org>"]
 license = "GPL-3.0-or-later"
 description = "performs a magic number in the magic number of a file"
-documentation = "https://docs.rs/obg"
+documentation = "https://docs.rs/magic-switcheroo"
 readme = "README.md"
 homepage = "https://github.com/gabrielfalcao/magic-switcheroo"
 
