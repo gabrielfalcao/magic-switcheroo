@@ -1,10 +1,8 @@
 // use std::path::{Path};
 use ansi_term;
 use clap::{Parser, Subcommand};
-use hex;
-use magic_switcheroo::fs::{enchant_file, read_file, restore_file, write_file};
-use magic_switcheroo::ram::{getmark, Digest, MetaMagic};
-use serde_json;
+use magic_switcheroo::fs::{enchant_file, restore_file};
+use magic_switcheroo::ram::{getmark, Digest};
 use std::error::Error;
 use std::fmt;
 pub use magic_switcheroo::errors::MSError;
