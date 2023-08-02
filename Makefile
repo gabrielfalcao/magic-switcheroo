@@ -33,6 +33,13 @@ run: $(MAGICSWITCHEROO_DEBUG_BIN) $(MAGICSWITCHEROO_RELEASE_BIN)
 	$(MS) e target/msswitcheroo.jpg --magic=AINTSOMETHIN
 	$(MS) r target/msswitcheroo.jpg --magic=AINTSOMETHIN
 	diff switcheroo.jpg target/msswitcheroo.jpg
+	@cp switcheroo.jpg target/msswitcheroo.jpg
+	$(MS) e target/msswitcheroo.jpg --magic=MAGIC
+	$(MS) r target/msswitcheroo.jpg --magic=MAGIC
+	diff switcheroo.jpg target/msswitcheroo.jpg
+	$(MS) e target/msswitcheroo.jpg --magic=OVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOW
+	$(MS) r target/msswitcheroo.jpg --magic=OVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOW
+	diff switcheroo.jpg target/msswitcheroo.jpg
 
 release: check fix | $(MAGICSWITCHEROO_RELEASE_BIN)
 	install $(MAGICSWITCHEROO_RELEASE_BIN) $(INSTALL_PATH)

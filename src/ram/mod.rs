@@ -112,10 +112,10 @@ impl MetaMagic {
 
         let odigest = crc32(&input)?;
         let car = Vec::from(&input[..CAR_SIZE]);
-        assert_eq!(car.len(), CAR_SIZE);
+        // assert_eq!(car.len(), CAR_SIZE);
 
         let cdr = Vec::from(&input[CAR_SIZE..]);
-        assert_eq!(cdr.len(), input_size - CAR_SIZE);
+        // assert_eq!(cdr.len(), input_size - CAR_SIZE);
 
         let ldigest = crc32(&car)?;
         let rdigest = crc32(&cdr)?;
@@ -136,7 +136,7 @@ impl MetaMagic {
     pub fn from_enchanted(input: Vec<u8>, magic: &str) -> Result<MetaMagic, MSError>  {
         let digest_size: usize = 4;
         let mut magic_size: i64 = magic.len() as i64;
-        assert!(magic_size == 12);
+        // assert!(magic_size == 12);
 
         let mut input = input.clone();
         magic_size = unpad32(Vec::from([input.remove(0),input.remove(0),input.remove(0),input.remove(0)]))[0];
