@@ -1,5 +1,5 @@
 #![allow(unused)]
-use crc::{Crc, CRC_32_ISCSI};
+use crc::{Crc, CRC_32_BZIP2};
 use hex;
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -11,7 +11,7 @@ use crate::pad::{pad32, unpad32};
 
 pub const CAR_SIZE: usize = 32;
 pub const DIGEST_SIZE: usize = 4;
-pub const CASTAGNOLI: Crc<u32> = Crc::<u32>::new(&CRC_32_ISCSI);
+pub const ZIP2: Crc<u32> = Crc::<u32>::new(&CRC_32_BZIP2);
 pub type Digest = [u8; DIGEST_SIZE];
 pub type Car = [u8; CAR_SIZE];
 
@@ -67,7 +67,7 @@ pub fn hexdecu32(value: u32) -> Result<Vec<u8>, MSError> {
     Ok(hexdeca(&padded)?)
 }
 pub fn crc32(data: &[u8]) -> Result<Vec<u8>, MSError> {
-    hexdecu32(CASTAGNOLI.checksum(&data))
+    hexdecu32(ZIP2.checksum(&data))
 }
 pub fn usize_to_hex(value: usize) -> Result<Vec<u8>, MSError> {
     return Ok(pad32(value as i64)?);
@@ -311,17 +311,17 @@ mod tests {
         assert_equal!(hex::encode(meta0.cdr()), hex::encode(meta1.body()));
         assert_equal!(hex::encode(meta0.cdr()), hex::encode(meta1.cdr()));
         assert_equal!(&hex::encode(meta0.magic()), "5448495349534d414749434f");
-        assert_equal!(&hex::encode(meta0.odigest()), "e0ffc577");
-        assert_equal!(&hex::encode(meta0.ldigest()), "47e70863");
-        assert_equal!(&hex::encode(meta0.rdigest()), "9c7e1a7f");
+        assert_equal!(&hex::encode(meta0.odigest()), "487cad4d");
+        assert_equal!(&hex::encode(meta0.ldigest()), "aff0df6b");
+        assert_equal!(&hex::encode(meta0.rdigest()), "2a00551c");
         assert_equal!(
             &hex::encode(meta0.car()),
             "34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089"
         );
         assert_equal!(&hex::encode(meta0.cdr()), "826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb");
-        assert_equal!(&hex::encode(meta0.head()?), "0000000c3d00000032245448495349534d414749434fc3bec3bfe0ffc57747e708639c7e1a7f34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089c3bec3bf");
+        assert_equal!(&hex::encode(meta0.head()?), "0000000c3d00000032245448495349534d414749434fc3bec3bf487cad4daff0df6b2a00551c34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089c3bec3bf");
         assert_equal!(&hex::encode(meta0.body()), "826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb");
-        assert_equal!(&hex::encode(meta0.enchant()?), "0000000c3d00000032245448495349534d414749434fc3bec3bfe0ffc57747e708639c7e1a7f34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089c3bec3bf826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb");
+        assert_equal!(&hex::encode(meta0.enchant()?), "0000000c3d00000032245448495349534d414749434fc3bec3bf487cad4daff0df6b2a00551c34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089c3bec3bf826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb");
         Ok(())
     }
 
@@ -344,9 +344,9 @@ mod tests {
             hex::encode(meta.odigest()),
             hex::encode(crc32(&original.clone())?)
         );
-        assert_equal!(&hex::encode(meta.odigest()), "e0ffc577");
-        assert_equal!(&hex::encode(meta.ldigest()), "47e70863");
-        assert_equal!(&hex::encode(meta.rdigest()), "9c7e1a7f");
+        assert_equal!(&hex::encode(meta.odigest()), "487cad4d");
+        assert_equal!(&hex::encode(meta.ldigest()), "aff0df6b");
+        assert_equal!(&hex::encode(meta.rdigest()), "2a00551c");
         assert_equal!(meta.car(), reverse_slice(&original[..32]));
         assert_equal!(
             &hex::encode(meta.car()),
@@ -390,9 +390,9 @@ mod tests {
                 0x54, 0x48, 0x49, 0x53, 0x49, 0x53, 0x4d, 0x41, 0x47, 0x49, 0x43, 0x4f,
                 // mach0
                 0xc3, 0xbe, 0xc3, 0xbf, // odigest
-                0xe0, 0xff, 0xc5, 0x77, // ldigest
-                0x47, 0xe7, 0x08, 0x63, // rdigest
-                0x9c, 0x7e, 0x1a, 0x7f, // car
+                0x48, 0x7c, 0xad, 0x4d, // ldigest
+                0xaf, 0xf0, 0xdf, 0x6b, // rdigest
+                0x2a, 0x00, 0x55, 0x1c, // car
                 0x34, 0xcb, 0x28, 0x00, 0x00, 0x00, 0x03, 0x08, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00,
                 0x00, 0x00, 0x52, 0x44, 0x48, 0x49, 0x0d, 0x00, 0x00, 0x00, 0x0a, 0x1a, 0x0a, 0x0d,
                 0x47, 0x4e, 0x50, 0x89, // machf
@@ -408,19 +408,19 @@ mod tests {
             test_string("ᎳᎡᎵᏓᎣᏅᎡ ᏔᎣ ᏅᏯ ᎳᎣᏛᎵᏗ, ᏔᎯᎡ ᎨᎡᎠᎤᏔᏯ ᎠᎾᏗ ᏔᎯᎡ ᎨᎠᎤᏗ"),
             "1CEB00DAFEFF",
         )?;
-        assert_equal!(&hex::encode(ck.enchant()?), "0000000c3d0000005224314345423030444146454646c3bec3bfe6be4e726bf0188194b224e3858fe120a38ee1948fe120a18ee1858fe1a38ee1938fe1b58ee1a18ee1b38ee1c3bec3bf978fe1a48ee1a08ee1a88ee120a18ee1af8ee1948fe120978fe1be8ee1a08ee120af8fe1948fe1a48ee1a08ee1a18ee1a88ee120a18ee1af8ee1948fe1202c978fe1b58ee19b8fe1a38ee1b38ee120af8fe1");
+        assert_equal!(&hex::encode(ck.enchant()?), "0000000c3d0000005224314345423030444146454646c3bec3bfd1e91b8368d67dd422594539858fe120a38ee1948fe120a18ee1858fe1a38ee1938fe1b58ee1a18ee1b38ee1c3bec3bf978fe1a48ee1a08ee1a88ee120a18ee1af8ee1948fe120978fe1be8ee1a08ee120af8fe1948fe1a48ee1a08ee1a18ee1a88ee120a18ee1af8ee1948fe1202c978fe1b58ee19b8fe1a38ee1b38ee120af8fe1");
 
         let ma = MetaMagic::new(
             test_string("њелцоме то мѕ њорлд, тхе беаутѕ анд тхе бауд"),
             "1CEB00DABA55",
         )?;
-        assert_equal!(&hex::encode(ma.enchant()?), "0000000c3d0000002f24314345423030444142413535c3bec3bfb4cc47bd6c6fecabac37934fd080d1bed09ad12095d1bcd020bed082d120b5d0bcd0bed086d1bbd0b5d09ad1c3bec3bfb4d083d1b0d0b1d020b5d085d182d120b4d0bdd0b0d02095d182d183d1b0d0b5d0b1d020b5d085d182d1202cb4d0bb");
+        assert_equal!(&hex::encode(ma.enchant()?), "0000000c3d0000002f24314345423030444142413535c3bec3bfb359b2cac92a4d693e17b91dd080d1bed09ad12095d1bcd020bed082d120b5d0bcd0bed086d1bbd0b5d09ad1c3bec3bfb4d083d1b0d0b1d020b5d085d182d120b4d0bdd0b0d02095d182d183d1b0d0b5d0b1d020b5d085d182d1202cb4d0bb");
 
         let th = MetaMagic::new(
             test_string("ตยเลวสย รว ส่ ตวอเงะ รีย ทิย้ดร่ ท้คง รีย ทิ้ดง"),
             "B4BYL0N1AN86",
         )?;
-        assert_equal!(&hex::encode(th.enchant()?), "0000000c3d0000005d24423442594c304e31414e3836c3bec3bf75e551a112b79542489c61cdaab8e020a7b8e0a3b8e020a2b8e0aab8e0a7b8e0a5b8e080b9e0a2b8e095b8e0c3bec3bf87b8e094b8e089b9e0b4b8e097b8e020a2b8e0b5b8e0a3b8e02087b8e084b8e089b9e097b8e02088b9e0a3b8e094b8e089b9e0a2b8e0b4b8e097b8e020a2b8e0b5b8e0a3b8e020b0b8e087b8e080b9e0adb8e0a7b8e095b8e02088b9e0");
+        assert_equal!(&hex::encode(th.enchant()?), "0000000c3d0000005d24423442594c304e31414e3836c3bec3bf292b700f63743585ebd81b14aab8e020a7b8e0a3b8e020a2b8e0aab8e0a7b8e0a5b8e080b9e0a2b8e095b8e0c3bec3bf87b8e094b8e089b9e0b4b8e097b8e020a2b8e0b5b8e0a3b8e02087b8e084b8e089b9e097b8e02088b9e0a3b8e094b8e089b9e0a2b8e0b4b8e097b8e020a2b8e0b5b8e0a3b8e020b0b8e087b8e080b9e0adb8e0a7b8e095b8e02088b9e0");
         Ok(())
     }
 

@@ -42,14 +42,14 @@ impl fmt::Display for DigestMismatch {
 
 #[derive(Subcommand)]
 enum Commands {
-    #[command(arg_required_else_help(true))]
+    #[command(arg_required_else_help(true))]//, help = "enchants a file with the given 96 bits magic word"]
     Enchant {
         #[arg(short, long)]
         magic: String,
 
         filename: String,
     },
-    #[command(arg_required_else_help(true))]
+    #[command(arg_required_else_help(true))]//, help = "repels the previous enchantment applied to a file with the given 96 bits magic word"]
     Repel {
         #[arg(short, long)]
         magic: String,

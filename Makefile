@@ -1,4 +1,4 @@
-.PHONY: all clean cls release debug fix fmt check build test examples run-$(MAGICSWITCHEROO_NAME)
+.PHONY: all clean cls release debug fix fmt check build test
 
 INSTALL_PATH		:= $(HOME)/usr/bin/
 

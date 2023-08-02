@@ -75,9 +75,9 @@ mod tests {
 
         // Then it should exist
         let (enchanted_contents, enchanted_checksum) = read_file(&name)?;
-        assert_equal!(hex::encode(enchanted_checksum), "1e1e86f5");
+        assert_equal!(hex::encode(enchanted_checksum), "8b86405c");
         assert_equal!(
-            hex::encode(enchanted_contents), "0000000c3d00000032245448495349534d414749434fc3bec3bfe0ffc57747e708639c7e1a7f34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089c3bec3bf826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb"
+            hex::encode(enchanted_contents), "0000000c3d00000032245448495349534d414749434fc3bec3bf487cad4daff0df6b2a00551c34cb2800000003080100000001000000524448490d0000000a1a0a0d474e5089c3bec3bf826042ae444e454900000000a66471f401000200000060639908544144490a000000c81bc4a7ffffff45544c5003000000bb"
         );
 
         Ok(())
