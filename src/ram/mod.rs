@@ -148,6 +148,8 @@ impl MetaMagic {
         let tail_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
         assert_eq!(tail_suffix, 0x24);
 
+        let magic_size:usize = magic_size as usize;
+        let tail_size:usize = tail_size as usize;
         let magic: Vec<u8> = Vec::from(&input[..magic_size]);
         let input = Vec::from(&input[magic_size..]);
 
