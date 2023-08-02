@@ -418,9 +418,9 @@ mod tests {
 
         let th = MetaMagic::new(
             test_string("ตยเลวสย รว ส่ ตวอเงะ รีย ทิย้ดร่ ท้คง รีย ทิ้ดง"),
-            "B4BYL0N1AN42",
+            "B4BYL0N1AN86",
         )?;
-        assert_equal!(&hex::encode(th.enchant()?), "0000000c3d0000005d24423442594c304e31414e3432c3bec3bf75e551a112b79542489c61cdaab8e020a7b8e0a3b8e020a2b8e0aab8e0a7b8e0a5b8e080b9e0a2b8e095b8e0c3bec3bf87b8e094b8e089b9e0b4b8e097b8e020a2b8e0b5b8e0a3b8e02087b8e084b8e089b9e097b8e02088b9e0a3b8e094b8e089b9e0a2b8e0b4b8e097b8e020a2b8e0b5b8e0a3b8e020b0b8e087b8e080b9e0adb8e0a7b8e095b8e02088b9e0");
+        assert_equal!(&hex::encode(th.enchant()?), "0000000c3d0000005d24423442594c304e31414e3836c3bec3bf75e551a112b79542489c61cdaab8e020a7b8e0a3b8e020a2b8e0aab8e0a7b8e0a5b8e080b9e0a2b8e095b8e0c3bec3bf87b8e094b8e089b9e0b4b8e097b8e020a2b8e0b5b8e0a3b8e02087b8e084b8e089b9e097b8e02088b9e0a3b8e094b8e089b9e0a2b8e0b4b8e097b8e020a2b8e0b5b8e0a3b8e020b0b8e087b8e080b9e0adb8e0a7b8e095b8e02088b9e0");
         Ok(())
     }
 
