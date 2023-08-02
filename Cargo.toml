@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 authors = ["Gabriel Falcão <gabriel@nacaolivre.org>"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "GPL-3.0-or-later"
+description = "performs a magic number in the magic number of a file"
+documentation = "https://docs.rs/obg"
+readme = "README.md"
+homepage = "https://github.com/gabrielfalcao/magic-switcheroo"
 
 [dependencies]
 ansi_term = { version = "0.12.1", features = ["derive_serde_style", "serde"] }
