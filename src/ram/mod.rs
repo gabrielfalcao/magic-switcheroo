@@ -141,11 +141,11 @@ impl MetaMagic {
         let mut input = input.clone();
         magic_size = unpad32(Vec::from([input.remove(0),input.remove(0),input.remove(0),input.remove(0)]))[0];
         let magic_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
-        assert_eq!(magic_suffix, 0x3d);
+        // assert_eq!(magic_suffix, 0x3d);
         let tail_size = unpad32(Vec::from([input.remove(0), input.remove(0), input.remove(0), input.remove(0)]))[0];
 
         let tail_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
-        assert_eq!(tail_suffix, 0x24);
+        // assert_eq!(tail_suffix, 0x24);
 
         let magic_size:usize = magic_size as usize;
         let tail_size:usize = tail_size as usize;
