@@ -34,6 +34,6 @@ ms r ice.ico --magic=AIRCONDIT
 Escape the bytes with hex-encoding
 
 ```bash
-ms e Screenshot.png --magic=\x1c\xb0\x0d\xa\x370\x145
-ms r Screenshot.png --magic=\x1c\xb0\x0d\xa\x370\x145
+ms e --magic=$(echo -ne "\x1c\xb0\x0d\xa\x25\x145\x18\x7f\x2a") Screenshot.png
+ms r --magic=$(echo -ne "\x1c\xb0\x0d\xa\x25\x145\x18\x7f\x2a") Screenshot.png
 ```

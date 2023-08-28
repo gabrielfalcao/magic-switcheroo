@@ -54,7 +54,7 @@ impl fmt::Display for DigestMismatch {
 }
 
 pub fn hexdecs(data: &str) -> Result<Vec<u8>, MSError> {
-    match hex::decode(&data.clone()) {
+    match hex::decode(&data) {
         Ok(tocat) => Ok(tocat),
         Err(e) => Err(MSError::HexDecodingError(format!("Failed to decode hex: {data}: {e}"))),
     }
@@ -103,7 +103,7 @@ pub struct MetaMagic {
 
 impl MetaMagic {
     pub fn new(input: Vec<u8>, magic: &str) -> Result<MetaMagic, MSError>  {
-        let magic = magic.clone().to_string();
+        let magic = magic.to_string();
         let bom = getmark();
         let magic_size: usize = magic.len();
 
@@ -291,7 +291,7 @@ mod tests {
     }
     #[allow(unused)]
     fn test_string(data: &str) -> Vec<u8> {
-        data.clone().as_bytes().to_vec()
+        data.as_bytes().to_vec()
     }
     #[test]
     fn test_metamagic_eq() -> Result<(), MSError> {
