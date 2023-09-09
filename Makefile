@@ -1,6 +1,6 @@
 .PHONY: all clean cls release debug fix fmt check build test
 
-INSTALL_PATH		:= $(HOME)/usr/bin/
+INSTALL_PATH		:= $(HOME)/usr/libexec/
 
 MAGICSWITCHEROO_NAME		:=ms
 MAGICSWITCHEROO_DEBUG_BIN	:=target/debug/$(MAGICSWITCHEROO_NAME)
@@ -39,6 +39,11 @@ run: $(MAGICSWITCHEROO_DEBUG_BIN) $(MAGICSWITCHEROO_RELEASE_BIN)
 	diff switcheroo.jpg target/msswitcheroo.jpg
 	$(MS) e target/msswitcheroo.jpg --magic=OVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOW
 	$(MS) r target/msswitcheroo.jpg --magic=OVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOWOVERFLOWOVERLOWOVERFLOW
+	diff switcheroo.jpg target/msswitcheroo.jpg
+	$(MS) gp target/msswitcheroo.jpg 0x5e
+	$(MS) gs target/msswitcheroo.jpg 0x25
+	$(MS) ds target/msswitcheroo.jpg 1
+	$(MS) de target/msswitcheroo.jpg 1
 	diff switcheroo.jpg target/msswitcheroo.jpg
 
 release: check fix | $(MAGICSWITCHEROO_RELEASE_BIN)
