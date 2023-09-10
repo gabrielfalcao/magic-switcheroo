@@ -131,9 +131,11 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         }
         Commands::Gp { filename, bytes } => {
             prefix_file(filename.to_string(), bytes.to_vec())?;
+            eprintln!("gp {}", filename);
         }
         Commands::Gs { filename, bytes } => {
             suffix_file(filename.to_string(), bytes.to_vec())?;
+            eprintln!("gs {}", filename);
         }
         Commands::Ds { filename, amount } => {
             let start = delete_start_file(filename.to_string(), *amount)?;
