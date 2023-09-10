@@ -29,11 +29,8 @@ just remember to use the same magic as in the previous case
 ms r ice.ico --magic=AIRCONDIT
 ```
 
-### Using raw-bytes as magic
-
-Escape the bytes with hex-encoding
+### More
 
 ```bash
-ms e --magic=$(echo -ne "\x1c\xb0\x0d\xa\x25\x145\x18\x7f\x2a") Screenshot.png
-ms r --magic=$(echo -ne "\x1c\xb0\x0d\xa\x25\x145\x18\x7f\x2a") Screenshot.png
+ms --help
 ```
