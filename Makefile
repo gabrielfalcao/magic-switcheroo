@@ -67,5 +67,8 @@ fmt:
 check:
 	cargo check --all-targets
 
-build test: check
+build: check
 	cargo $@
+
+test:
+	cargo test --color always -- --nocapture --test-threads 1

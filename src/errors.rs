@@ -3,6 +3,8 @@ use std::error::Error;
 use std::fmt;
 use hex::FromHexError;
 use std::num::ParseIntError;
+use crate::ram::VecsException;
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum MSError {
@@ -10,6 +12,7 @@ pub enum MSError {
     HexDecodingError(String),
     HexEncodingError(String),
     ParseIntError(String),
+    VecsError(VecsException),
 }
 
 impl fmt::Display for MSError {
@@ -19,6 +22,10 @@ impl fmt::Display for MSError {
             MSError::IOError(msg) => write!(f, "IOError: {msg}"),
             MSError::HexDecodingError(msg) => write!(f, "HexDecodingError: {msg}"),
             MSError::HexEncodingError(msg) => write!(f, "HexEncodingError: {msg}"),
+            MSError::VecsError(e) => write!(f, "{}", match e {
+                VecsException::PatternNotFound(pattern) => format!("pattern not found: {}", hex::encode(pattern)),
+                VecsException::NotAllOccurrencesReplaced((pattern, occrsf, occrse)) => format!("not enought ocurrences found for {} ({}/{})", hex::encode(pattern), occrsf, occrse),
+            }),
             MSError::ParseIntError(msg) => write!(f, "ParseIntError: {msg}"),
         }
     }

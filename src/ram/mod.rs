@@ -1,11 +1,11 @@
-#![allow(unused)]
 use crc::{Crc, CRC_32_BZIP2};
 use hex;
 use serde::{Deserialize, Serialize};
-use serde_json;
 use std::fmt;
 
+pub mod vecs;
 use crate::errors::MSError;
+pub use vecs::*;
 
 use crate::pad::{pad32, unpad32};
 
@@ -107,8 +107,8 @@ impl MetaMagic {
         let bom = getmark();
         let magic_size: usize = magic.len();
 
-        let bom_size: usize = bom.len();
-        let input_size = input.len();
+        // let bom_size: usize = bom.len();
+        // let input_size = input.len();
 
         let odigest = crc32(&input)?;
         let car = Vec::from(&input[..CAR_SIZE]);
@@ -133,23 +133,24 @@ impl MetaMagic {
             cdr: reverse_slice(&cdr.clone()),
         });
     }
-    pub fn from_enchanted(input: Vec<u8>, magic: &str) -> Result<MetaMagic, MSError>  {
+    pub fn from_enchanted(input: Vec<u8>, spell: &str) -> Result<MetaMagic, MSError>  {
         let digest_size: usize = 4;
-        let mut magic_size: i64 = magic.len() as i64;
+        // let mut magic_size: i64 = magic.len() as i64;
         // assert!(magic_size == 12);
 
         let mut input = input.clone();
-        magic_size = unpad32(Vec::from([input.remove(0),input.remove(0),input.remove(0),input.remove(0)]))[0];
+        let magic_size = unpad32(Vec::from([input.remove(0),input.remove(0),input.remove(0),input.remove(0)]))[0];
         let magic_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
-        // assert_eq!(magic_suffix, 0x3d);
+        assert_eq!(magic_suffix, 0x3d);
         let tail_size = unpad32(Vec::from([input.remove(0), input.remove(0), input.remove(0), input.remove(0)]))[0];
 
         let tail_suffix = hex_to_usize(Vec::from([input.remove(0)]), 1)?;
-        // assert_eq!(tail_suffix, 0x24);
+        assert_eq!(tail_suffix, 0x24);
 
         let magic_size:usize = magic_size as usize;
         let tail_size:usize = tail_size as usize;
         let magic: Vec<u8> = Vec::from(&input[..magic_size]);
+        assert_eq!(&magic, spell.as_bytes());
         let input = Vec::from(&input[magic_size..]);
 
         let mach0: Vec<u8> = Vec::from(&input[..digest_size]);
