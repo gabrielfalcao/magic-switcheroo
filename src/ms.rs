@@ -8,10 +8,13 @@ use magic_switcheroo::fs::{
     delete_start_file,
     read_end_file,
     read_start_file,
+    read_file_chunks,
     enchant_file,
     restore_file,
     prefix_file,
     suffix_file,
+    read_file,
+    write_file,
 };
 use magic_switcheroo::ram::{Digest};
 use std::error::Error;
@@ -78,6 +81,18 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         Commands::Re(ops) => {
             let end = read_end_file(ops.filename.to_string(), ops.amount)?;
             println!("{}", end.iter().map(|x| format!("0x{:02x}", x)).collect::<Vec<String>>().join(" "));
+        }
+        Commands::Ch(ops) => {
+            let chunks = read_file_chunks(ops.filename.to_string(), ops.amount, ops.skip_chunks)?;
+            for chunk in chunks {
+                println!("{}", chunk.iter().map(|x| format!("{:02x}", x)).collect::<Vec<String>>().join(""));
+            }
+        }
+        Commands::Rev(ops) => {
+            let (mut bytes, crc32) = read_file(&ops.filename.to_string())?;
+            bytes.reverse();
+            let output = format!("{}.{}", &ops.filename, hex::encode(crc32));
+            write_file(output, bytes)?;
         }
     }
     Ok(())

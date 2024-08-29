@@ -1,6 +1,12 @@
+## ##'"""""`## #"""""`'"""`Y#
+## #' .mmm. `# #  mm.  mm.  #
+## #  ######## #  ###  ###  #
+## #  ###   `# #  ###  ###  #
+## #. `###' .# #  ###  ###  #
+## ##.     .## #  ###  ###  #
+## ########### ##############
 .PHONY: all clean cls release debug fix fmt check build test
 
-INSTALL_PATH		:= $(HOME)/usr/libexec/
 
 MAGICSWITCHEROO_NAME		:=ms
 MAGICSWITCHEROO_DEBUG_BIN	:=target/debug/$(MAGICSWITCHEROO_NAME)
@@ -12,6 +18,8 @@ export CFLAGS			:="$(shell pkg-config --cflags libmagic)"
 export CPPFLAGS			:="$(shell pkg-config --cflags libmagic)"
 export LDFLAGS			:="$(shell pkg-config --libs libmagic)"
 export K9_UPDATE_SNAPSHOTS	:=1
+INSTALL_PATH			:= $(HOME)/opt/libexec/$(MAGICSWITCHEROO_NAME)
+
 all: test debug release
 
 $(INSTALL_PATH):
@@ -45,6 +53,10 @@ run: $(MAGICSWITCHEROO_DEBUG_BIN) $(MAGICSWITCHEROO_RELEASE_BIN)
 	$(MS) ds target/msswitcheroo.jpg 1
 	$(MS) de target/msswitcheroo.jpg 1
 	diff switcheroo.jpg target/msswitcheroo.jpg
+	$(MS) ch target/mspix.jpg 32
+
+test-chunks:
+	$(MS) ch target/mspix.jpg 32
 
 release: check fix | $(MAGICSWITCHEROO_RELEASE_BIN)
 	install $(MAGICSWITCHEROO_RELEASE_BIN) $(INSTALL_PATH)

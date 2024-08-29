@@ -42,35 +42,33 @@ pub enum Commands {
     )]
     Gs(GsOps),
 
-    #[command(
-        arg_required_else_help(true),
-        about = "dels first N bytes of file"
-    )]
+    #[command(arg_required_else_help(true), about = "dels first N bytes of file")]
     Ds(DsOps),
 
-    #[command(
-        arg_required_else_help(true),
-        about = "dels last N bytes of file"
-    )]
+    #[command(arg_required_else_help(true), about = "dels last N bytes of file")]
     De(DeOps),
 
-    #[command(
-        arg_required_else_help(true),
-        about = "reads first N bytes of file"
-    )]
+    #[command(arg_required_else_help(true), about = "reads first N bytes of file")]
     Rs(RsOps),
+
+    #[command(arg_required_else_help(true), about = "reads last N bytes of file")]
+    Re(ReOps),
 
     #[command(
         arg_required_else_help(true),
-        about = "reads last N bytes of file"
+        about = "reads every N bytes chunking with linebreak"
     )]
-    Re(ReOps),
+    Ch(ChOps),
+
+    #[command(arg_required_else_help(true), about = "Rev")]
+    Rev(RevOps),
 }
 
 #[derive(Args, Debug)]
 pub struct EOps {
     #[arg(short, long)]
     pub magic: String,
+    #[arg()]
     pub filename: String,
 }
 
@@ -78,41 +76,71 @@ pub struct EOps {
 pub struct ROps {
     #[arg(short, long)]
     pub magic: String,
+    #[arg()]
     pub filename: String,
 }
 
 #[derive(Args, Debug)]
 pub struct GpOps {
+    #[arg()]
     pub filename: String,
+    #[arg()]
     pub bytes: Vec<String>,
 }
 
 #[derive(Args, Debug)]
 pub struct GsOps {
+    #[arg()]
     pub filename: String,
+    #[arg()]
     pub bytes: Vec<String>,
 }
 
 #[derive(Args, Debug)]
 pub struct DsOps {
+    #[arg()]
     pub filename: String,
+    #[arg(default_value_t = 0)]
     pub amount: usize,
 }
 
 #[derive(Args, Debug)]
 pub struct DeOps {
+    #[arg()]
     pub filename: String,
+    #[arg(default_value_t = 0)]
     pub amount: usize,
 }
 
 #[derive(Args, Debug)]
 pub struct RsOps {
+    #[arg()]
     pub filename: String,
+    #[arg(default_value_t = 0)]
     pub amount: usize,
 }
 
 #[derive(Args, Debug)]
 pub struct ReOps {
+    #[arg()]
     pub filename: String,
+    #[arg(default_value_t = 0)]
     pub amount: usize,
+}
+
+#[derive(Args, Debug)]
+pub struct ChOps {
+    #[arg()]
+    pub filename: String,
+    #[arg(default_value_t = 0)]
+    pub amount: usize,
+
+    #[arg(short, long)]
+    pub skip_chunks: Option<usize>,
+}
+
+#[derive(Args, Debug)]
+pub struct RevOps {
+    #[arg()]
+    pub filename: String,
 }

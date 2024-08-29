@@ -1,6 +1,6 @@
 [package]
 name = "magic-switcheroo"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 
 authors = ["Gabriel Falcão <gabriel@nacaolivre.org>"]
@@ -20,7 +20,7 @@ serde_json = { version = "1.0.97", features = ["preserve_order"] }
 
 [[bin]]
 name = "ms"
-path = "src/main.rs"
+path = "src/ms.rs"
 bench = false
 
 [lib]

@@ -58,6 +58,7 @@ pub fn prefix_file(filename: String, prefix: Vec<String>) -> Result<(), MSError>
 
 pub fn delete_start_file(filename: String, amnt: usize) -> Result<Vec<u8>, MSError> {
     let (read, _) = read_file(&filename)?;
+    let amnt = if amnt < 1 { read.len() } else {amnt};
     let mut data = VecDeque::<u8>::from(read);
     let mut popped = Vec::<u8>::new();
     for _ in 0..amnt {
@@ -72,6 +73,7 @@ pub fn delete_start_file(filename: String, amnt: usize) -> Result<Vec<u8>, MSErr
 
 pub fn delete_end_file(filename: String, amnt: usize) -> Result<Vec<u8>, MSError> {
     let (read, _) = read_file(&filename)?;
+    let amnt = if amnt < 1 { read.len() } else {amnt};
     let mut data = VecDeque::<u8>::from(read);
     let mut popped = Vec::<u8>::new();
     for _ in 0..amnt {
@@ -86,13 +88,33 @@ pub fn delete_end_file(filename: String, amnt: usize) -> Result<Vec<u8>, MSError
 
 pub fn read_start_file(filename: String, amnt: usize) -> Result<Vec<u8>, MSError> {
     let (read, _) = read_file(&filename)?;
+    let amnt = if amnt < 1 { read.len() } else {amnt};
     Ok(read[0..amnt].to_vec())
 }
 
 pub fn read_end_file(filename: String, amnt: usize) -> Result<Vec<u8>, MSError> {
     let (read, _) = read_file(&filename)?;
+    let amnt = if amnt < 1 { read.len() } else {amnt};
     let h = read.len() - amnt;
     Ok(read[h..].to_vec())
+}
+pub fn read_file_chunks(
+    filename: String,
+    amnt: usize,
+    skip_chunks: Option<usize>,
+) -> Result<Vec<Vec<u8>>, MSError> {
+    let mut chunks: Vec<Vec<u8>> = Vec::new();
+    let (read, _) = read_file(&filename)?;
+    let amnt = if amnt < 1 { read.len() } else {amnt};
+    for (n, chunk) in read.chunks(amnt).enumerate() {
+        if let Some(sn) = skip_chunks {
+            if n < sn {
+                continue;
+            }
+        }
+        chunks.push(chunk.to_vec());
+    }
+    Ok(chunks)
 }
 
 #[cfg(test)]
